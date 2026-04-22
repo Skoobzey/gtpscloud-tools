@@ -1,0 +1,28 @@
+{
+  "name": "@gtps/bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "deploy": "tsx src/deploy.ts"
+  },
+  "dependencies": {
+    "@gtps/shared": "workspace:*",
+    "discord.js": "^14.18.0",
+    "dotenv": "latest",
+    "drizzle-orm": "latest",
+    "node-cron": "^3.0.3",
+    "postgres": "latest",
+    "sharp": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

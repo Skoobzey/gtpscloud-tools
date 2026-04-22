@@ -1,0 +1,19 @@
+{
+  "name": "gtps-cloud-ticket-bot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "bot:dev": "pnpm --filter @gtps/bot dev",
+    "bot:build": "pnpm --filter @gtps/bot build",
+    "bot:deploy": "pnpm --filter @gtps/bot run deploy",
+    "web:dev": "pnpm --filter @gtps/web dev",
+    "web:build": "pnpm --filter @gtps/web build",
+    "db:generate": "pnpm --filter @gtps/shared db:generate",
+    "db:migrate": "pnpm --filter @gtps/shared db:migrate",
+    "db:push": "pnpm --filter @gtps/shared db:push",
+    "build": "pnpm --filter @gtps/shared build && pnpm --filter @gtps/bot build && pnpm --filter @gtps/web build"
+  },
+  "devDependencies": {
+    "typescript": "latest"
+  }
+}
