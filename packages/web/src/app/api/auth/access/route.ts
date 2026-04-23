@@ -17,7 +17,8 @@ export async function GET(request: Request) {
     where: eq(guildConfig.guildId, GUILD_ID),
   });
 
-  const sessionRes = await fetch(new URL('/api/auth/get-session', request.url), {
+  const internalBase = process.env.INTERNAL_API_URL ?? 'http://localhost:3000';
+  const sessionRes = await fetch(`${internalBase}/api/auth/get-session`, {
     headers: { cookie: request.headers.get('cookie') ?? '' },
   }).catch(() => null);
 

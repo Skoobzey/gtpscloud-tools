@@ -34,7 +34,9 @@ export async function proxy(request: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  const sessionRes = await fetch(new URL('/api/auth/get-session', request.url), {
+  const internalBase = process.env.INTERNAL_API_URL ?? 'http://localhost:3000';
+
+  const sessionRes = await fetch(`${internalBase}/api/auth/get-session`, {
     headers: { cookie: request.headers.get('cookie') ?? '' },
   }).catch(() => null);
 
@@ -48,7 +50,7 @@ export async function proxy(request: NextRequest) {
     return deny(request);
   }
 
-  const accessRes = await fetch(new URL('/api/auth/access', request.url), {
+  const accessRes = await fetch(`${internalBase}/api/auth/access`, {
     headers: { cookie: request.headers.get('cookie') ?? '' },
   }).catch(() => null);
   const accessConfig = (await accessRes?.json().catch(() => null)) as AccessConfigResponse | null;
