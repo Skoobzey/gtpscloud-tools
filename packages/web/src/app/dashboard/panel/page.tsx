@@ -97,13 +97,18 @@ export default function PanelPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'refresh', panelMessage, panelTitle }),
     });
-    const data = await res.json();
     setSyncing(false);
 
     if (!res.ok) {
+      const data = await res.json().catch(() => ({})) as { error?: string; code?: string };
+      if (data.code === 'MESSAGE_NOT_FOUND') {
+        setStatus(prev => ({ ...prev, panelMessageId: null }));
+      }
       setFeedback({ ok: false, msg: data.error ?? 'Failed to sync panel.' });
       return false;
     }
+
+    const data = await res.json();
 
     setFeedback({ ok: true, msg: 'Panel synced automatically.' });
     return true;

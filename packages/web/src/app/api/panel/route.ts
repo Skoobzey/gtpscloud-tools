@@ -48,7 +48,22 @@ export async function POST(request: Request) {
   const payload = buildPanelPayload(categories, body.panelMessage ?? cfg?.panelMessage, body.panelTitle ?? cfg?.panelTitle);
 
   if (action === 'refresh' && cfg?.panelChannelId && cfg.panelMessageId) {
-    await discordRequest('PATCH', `/channels/${cfg.panelChannelId}/messages/${cfg.panelMessageId}`, payload);
+    try {
+      await discordRequest('PATCH', `/channels/${cfg.panelChannelId}/messages/${cfg.panelMessageId}`, payload);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('10008') || msg.includes('404')) {
+        // Stale panel message — clear it so the UI can recreate
+        await db.insert(guildConfig)
+          .values({ guildId: GUILD_ID, panelMessageId: null, updatedAt: new Date() })
+          .onConflictDoUpdate({ target: guildConfig.guildId, set: { panelMessageId: null, updatedAt: new Date() } });
+        return NextResponse.json(
+          { error: 'Panel message no longer exists. Please recreate the panel.', code: 'MESSAGE_NOT_FOUND' },
+          { status: 404 },
+        );
+      }
+      throw err;
+    }
     const saveSet: Record<string, unknown> = { updatedAt: new Date() };
     if (body.panelMessage !== undefined) saveSet.panelMessage = body.panelMessage;
     if (body.panelTitle !== undefined) saveSet.panelTitle = body.panelTitle;
