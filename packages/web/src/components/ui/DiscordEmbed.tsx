@@ -82,7 +82,6 @@ export function DiscordEmbed({
   );
 }
 
-/** Renders a mock panel embed with categories */
 interface PanelEmbedPreviewProps {
   panelTitle?: string;
   panelMessage?: string;
