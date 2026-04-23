@@ -103,7 +103,6 @@ export function PanelEmbedPreview({ panelTitle, panelMessage, categories }: Pane
         footer={`${title} • Support System`}
         timestamp
       />
-      {/* Mock select menu */}
       {active.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[#1e1f22] border border-[#3f3f46] rounded text-sm text-[#87898c] max-w-lg">
           <span className="flex-1 truncate">Select a category to open a ticket…</span>

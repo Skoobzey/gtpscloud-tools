@@ -180,7 +180,6 @@ export default function CategoriesPage() {
     const previous = categories;
     setTogglingIds((ids) => [...ids, id]);
 
-    // Optimistically update status to avoid table reload/flicker.
     setCategories((current) =>
       current.map((cat) => (cat.id === id ? { ...cat, isActive: nextIsActive } : cat)),
     );
@@ -193,7 +192,6 @@ export default function CategoriesPage() {
       });
       if (!res.ok) throw new Error('Failed to toggle category');
     } catch {
-      // Revert on failure.
       setCategories(previous);
     } finally {
       setTogglingIds((ids) => ids.filter((x) => x !== id));

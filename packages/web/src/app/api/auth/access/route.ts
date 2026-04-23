@@ -34,7 +34,6 @@ export async function GET(request: Request) {
 
       discordId = discordAccount?.accountId ?? null;
 
-      // Backfill discordId on the user for future checks if missing.
       if (discordId) {
         await db
           .update(users)

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-// ── colour math ──────────────────────────────────────────────────────────────
 
 function hsvToRgb(h: number, s: number, v: number) {
   s /= 100; v /= 100;
@@ -49,7 +48,6 @@ function hueToHex(h: number) {
 
 function clamp01(n: number) { return Math.max(0, Math.min(1, n)); }
 
-// ── component ────────────────────────────────────────────────────────────────
 
 interface Props {
   value: string;
@@ -60,29 +58,25 @@ export function ColorPicker({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [hexInput, setHexInput] = useState(value.replace('#', ''));
 
-  // Local HSV — source of truth during drags. Only updated from external
-  // value when NOT dragging, to avoid the rgb→hsv round-trip clobbering hue.
   const initHsv = () => {
     const rgb = hexToRgb(value) ?? { r: 34, g: 197, b: 94 };
     return rgbToHsv(rgb.r, rgb.g, rgb.b);
   };
   const [hsv, setHsv] = useState(initHsv);
 
-  // Refs for drag handlers (closures capture stale state otherwise)
   const hsvRef = useRef(hsv);
   hsvRef.current = hsv;
 
-  // 'sv' | 'hue' | null — mutex so only one drag fires at a time
   const draggingRef = useRef<'sv' | 'hue' | null>(null);
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const svRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
 
-  // Sync hex input when value changes externally (not from our own onChange)
+
   const lastEmitted = useRef('');
   useEffect(() => {
-    if (value === lastEmitted.current) return; // our own emit, skip
+    if (value === lastEmitted.current) return;
     setHexInput(value.replace('#', ''));
     if (draggingRef.current === null) {
       const rgb = hexToRgb(value);
@@ -90,7 +84,6 @@ export function ColorPicker({ value, onChange }: Props) {
     }
   }, [value]);
 
-  // Click-outside close
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -101,7 +94,6 @@ export function ColorPicker({ value, onChange }: Props) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // ── emit helper ─────────────────────────────────────────────────────────────
 
   const emitHsv = useCallback((h: number, s: number, v: number) => {
     const c = hsvToRgb(h, s, v);
@@ -111,11 +103,10 @@ export function ColorPicker({ value, onChange }: Props) {
     onChange(hex);
   }, [onChange]);
 
-  // ── SV box drag ─────────────────────────────────────────────────────────────
 
   const startSvDrag = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (draggingRef.current !== null) return; // another drag in progress
+    if (draggingRef.current !== null) return;
     draggingRef.current = 'sv';
 
     const move = (ev: MouseEvent) => {
@@ -140,7 +131,6 @@ export function ColorPicker({ value, onChange }: Props) {
     window.addEventListener('mouseup', up);
   };
 
-  // ── Hue bar drag ────────────────────────────────────────────────────────────
 
   const startHueDrag = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -168,7 +158,6 @@ export function ColorPicker({ value, onChange }: Props) {
     window.addEventListener('mouseup', up);
   };
 
-  // ── Hex / RGB inputs ────────────────────────────────────────────────────────
 
   const handleHexCommit = (raw: string) => {
     setHexInput(raw);
@@ -193,7 +182,6 @@ export function ColorPicker({ value, onChange }: Props) {
     onChange(hex);
   };
 
-  // ── derived display values ───────────────────────────────────────────────────
 
   const rgb = hexToRgb(value) ?? { r: 34, g: 197, b: 94 };
   const pureHex = hueToHex(hsv.h);
@@ -204,7 +192,6 @@ export function ColorPicker({ value, onChange }: Props) {
   return (
     <div className="relative inline-block" ref={popoverRef}>
 
-      {/* ── Trigger ── */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -213,14 +200,11 @@ export function ColorPicker({ value, onChange }: Props) {
         <span className="w-5 h-5 rounded-md border border-[#3f3f46] flex-shrink-0" style={{ background: value }} />
         <span className="text-sm text-white font-mono">{value.toUpperCase()}</span>
       </button>
-
-      {/* ── Popover ── */}
       {open && (
         <div
           className="absolute z-20 top-full mt-2 left-0 bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl p-3 space-y-3"
           style={{ width: 232, userSelect: 'none' }}
         >
-          {/* SV box */}
           <div
             ref={svRef}
             className="relative w-full rounded-lg overflow-hidden cursor-crosshair"
@@ -229,14 +213,12 @@ export function ColorPicker({ value, onChange }: Props) {
           >
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to right,#fff,transparent)' }} />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom,transparent,#000)' }} />
-            {/* thumb */}
             <div
               className="absolute w-4 h-4 rounded-full border-2 border-white shadow pointer-events-none"
               style={{ left: svLeft, top: svTop, transform: 'translate(-50%,-50%)', background: value }}
             />
           </div>
 
-          {/* Hue bar */}
           <div
             ref={hueRef}
             className="relative w-full rounded-full cursor-pointer"
@@ -249,7 +231,6 @@ export function ColorPicker({ value, onChange }: Props) {
             />
           </div>
 
-          {/* Hex */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-[#52525b] font-mono">#</span>
             <input
@@ -260,7 +241,6 @@ export function ColorPicker({ value, onChange }: Props) {
             />
           </div>
 
-          {/* RGB */}
           <div className="grid grid-cols-3 gap-1.5">
             {(['r', 'g', 'b'] as const).map((ch) => (
               <div key={ch} className="flex flex-col items-center gap-1">
