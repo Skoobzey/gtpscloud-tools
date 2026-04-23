@@ -4,10 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "paths": {
-      "@gtps/shared": ["../shared/src/index.ts"]
-    }
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*"]
 }

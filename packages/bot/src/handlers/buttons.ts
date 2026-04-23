@@ -36,7 +36,7 @@ export async function handleButton(interaction: ButtonInteraction) {
     if (action === 'ticket_create') {
       const cfg = await getOrCreateConfig(config.guildId);
       if (!cfg.ticketingEnabled) {
-        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: cfg.ticketingDisabledReason, ephemeral: true });
         return;
       }
 
@@ -44,7 +44,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         where: and(eq(ticketCategories.id, id), eq(ticketCategories.isActive, true)),
       });
       if (!category) {
-        await interaction.reply({ content: 'Category not found or is inactive.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Category not found or is inactive.', ephemeral: true });
         return;
       }
 
@@ -71,7 +71,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         return;
       }
 
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       try {
         const { channel } = await createTicket(guild, member, id);
         await interaction.editReply({ content: `Your ticket has been created: <#${channel.id}>` });
@@ -102,7 +102,7 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_reopen') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can reopen tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can reopen tickets.', ephemeral: true });
         return;
       }
       await interaction.deferUpdate();
@@ -112,17 +112,17 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_delete') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can delete tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can delete tickets.', ephemeral: true });
         return;
       }
-      await interaction.reply({ content: 'Deleting ticket…', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: 'Deleting ticket…', ephemeral: true });
       await deleteTicket(id, interaction.user.id, guild);
       return;
     }
 
     if (action === 'ticket_claim') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can claim tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can claim tickets.', ephemeral: true });
         return;
       }
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
@@ -138,12 +138,12 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_hold') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can hold or resume tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can hold or resume tickets.', ephemeral: true });
         return;
       }
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
       if (!ticket) {
-        await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Ticket not found.', ephemeral: true });
         return;
       }
       await interaction.deferUpdate();
@@ -157,10 +157,10 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_transcript') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can generate transcripts.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can generate transcripts.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
       if (!ticket) {
         await interaction.editReply({ content: 'Ticket not found.' });

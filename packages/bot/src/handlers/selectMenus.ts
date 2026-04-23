@@ -25,7 +25,7 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
     if (action === 'panel_select') {
       const cfg = await getOrCreateConfig(config.guildId);
       if (!cfg.ticketingEnabled) {
-        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: cfg.ticketingDisabledReason, ephemeral: true });
         return;
       }
 
@@ -35,7 +35,7 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
         where: and(eq(ticketCategories.id, categoryId), eq(ticketCategories.isActive, true)),
       });
       if (!category) {
-        await interaction.reply({ content: 'Category not found or is inactive.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Category not found or is inactive.', ephemeral: true });
         return;
       }
 
@@ -67,18 +67,18 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
         const { channel } = await createTicket(guild, member, categoryId);
         await interaction.followUp({
           content: `Your ticket has been created: <#${channel.id}>`,
-          flags: MessageFlags.Ephemeral,
+          ephemeral: true,
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Could not create ticket.';
-        await interaction.followUp({ content: msg, flags: MessageFlags.Ephemeral });
+        await interaction.followUp({ content: msg, ephemeral: true });
       }
       return;
     }
 
     if (action === 'ticket_priority') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can change ticket priority.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can change ticket priority.', ephemeral: true });
         return;
       }
 
@@ -89,7 +89,7 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
         .set({ priority: level, updatedAt: new Date() })
         .where(eq(tickets.id, id));
 
-      await interaction.reply({ content: `Priority updated to **${level}**.`, flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: `Priority updated to **${level}**.`, ephemeral: true });
     }
   } catch (err) {
     console.error('[SelectMenu Error]', err);

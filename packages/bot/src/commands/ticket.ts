@@ -83,7 +83,7 @@ export const ticketCommand: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild || !interaction.member) {
-      await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: 'This command can only be used in a server.', ephemeral: true });
       return;
     }
 
@@ -98,7 +98,7 @@ export const ticketCommand: Command = {
 
     const requireTicketChannel = () => {
       if (!ticket) {
-        return interaction.reply({ content: 'This command must be used inside a ticket channel.', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: 'This command must be used inside a ticket channel.', ephemeral: true });
       }
       return null;
     };
@@ -107,11 +107,11 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff && ticket!.userId !== interaction.user.id) {
-        await interaction.reply({ content: 'You do not have permission to close this ticket.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'You do not have permission to close this ticket.', ephemeral: true });
         return;
       }
       const reason = interaction.options.getString('reason') ?? undefined;
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await closeTicket(ticket!.id, interaction.user.id, guild, reason);
       await interaction.editReply({ content: 'Ticket closed.' });
       return;
@@ -121,10 +121,10 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can reopen tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can reopen tickets.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await reopenTicket(ticket!.id, interaction.user.username, guild);
       await interaction.editReply({ content: 'Ticket reopened.' });
       return;
@@ -134,10 +134,10 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can delete tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can delete tickets.', ephemeral: true });
         return;
       }
-      await interaction.reply({ content: 'Deleting ticket...', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: 'Deleting ticket...', ephemeral: true });
       await deleteTicket(ticket!.id, interaction.user.id, guild);
       return;
     }
@@ -146,14 +146,14 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can claim tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can claim tickets.', ephemeral: true });
         return;
       }
       if (ticket!.claimedBy) {
-        await interaction.reply({ content: `This ticket is already claimed by <@${ticket!.claimedBy}>.`, flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: `This ticket is already claimed by <@${ticket!.claimedBy}>.`, ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await claimTicket(ticket!.id, interaction.user.id, interaction.user.username, guild);
       await interaction.editReply({ content: 'You have claimed this ticket.' });
       return;
@@ -163,10 +163,10 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can unclaim tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can unclaim tickets.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await unclaimTicket(ticket!.id, guild);
       await interaction.editReply({ content: 'Ticket unclaimed.' });
       return;
@@ -176,11 +176,11 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can add users to tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can add users to tickets.', ephemeral: true });
         return;
       }
       const user = interaction.options.getUser('user', true);
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await addParticipant(ticket!.id, user.id, interaction.user.id, guild);
       await interaction.editReply({ content: `<@${user.id}> has been added to the ticket.` });
       return;
@@ -190,14 +190,14 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can put tickets on hold.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can put tickets on hold.', ephemeral: true });
         return;
       }
       if (ticket!.status === 'pending') {
-        await interaction.reply({ content: 'This ticket is already on hold.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'This ticket is already on hold.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await holdTicket(ticket!.id, interaction.user.id, interaction.user.username, guild);
       await interaction.editReply({ content: 'Ticket placed on hold.' });
       return;
@@ -207,14 +207,14 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can resume held tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can resume held tickets.', ephemeral: true });
         return;
       }
       if (ticket!.status !== 'pending') {
-        await interaction.reply({ content: 'This ticket is not currently on hold.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'This ticket is not currently on hold.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await resumeTicket(ticket!.id, interaction.user.id, interaction.user.username, guild);
       await interaction.editReply({ content: 'Ticket resumed.' });
       return;
@@ -224,11 +224,11 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can remove users from tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can remove users from tickets.', ephemeral: true });
         return;
       }
       const user = interaction.options.getUser('user', true);
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await removeParticipant(ticket!.id, user.id, guild);
       await interaction.editReply({ content: `<@${user.id}> has been removed from the ticket.` });
       return;
@@ -238,17 +238,17 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can transfer tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can transfer tickets.', ephemeral: true });
         return;
       }
       const staff = interaction.options.getUser('staff', true);
       const staffMember = await guild.members.fetch(staff.id);
       const targetIsStaff = await isStaffMember(staffMember);
       if (!targetIsStaff) {
-        await interaction.reply({ content: 'That user is not a staff member.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'That user is not a staff member.', ephemeral: true });
         return;
       }
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await unclaimTicket(ticket!.id, guild);
       await claimTicket(ticket!.id, staff.id, staff.username, guild);
       await interaction.editReply({ content: `Ticket transferred to <@${staff.id}>.` });
@@ -259,13 +259,13 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can change ticket priority.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can change ticket priority.', ephemeral: true });
         return;
       }
       const level = interaction.options.getString('level', true) as 'low' | 'normal' | 'high' | 'urgent';
       await db.update(tickets).set({ priority: level, updatedAt: new Date() }).where(eq(tickets.id, ticket!.id));
       await updateOpenEmbed(ticket!.id, guild);
-      await interaction.reply({ content: `Priority set to **${level}**.`, flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: `Priority set to **${level}**.`, ephemeral: true });
       return;
     }
 
@@ -273,13 +273,13 @@ export const ticketCommand: Command = {
       const check = requireTicketChannel();
       if (check) return;
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can rename tickets.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Only staff can rename tickets.', ephemeral: true });
         return;
       }
       const name = interaction.options.getString('name', true).toLowerCase().replace(/[^a-z0-9-]/g, '-');
       const channel = interaction.channel as TextChannel;
       await channel.setName(name);
-      await interaction.reply({ content: `Channel renamed to **${name}**.`, flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: `Channel renamed to **${name}**.`, ephemeral: true });
       return;
     }
   },

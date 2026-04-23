@@ -16,7 +16,7 @@ export async function interactionCreate(interaction: Interaction) {
       await command.execute(interaction);
     } catch (err) {
       console.error(`[Command Error] ${interaction.commandName}:`, err);
-      const payload = { content: 'An error occurred while executing this command.', flags: MessageFlags.Ephemeral };
+      const payload = { content: 'An error occurred while executing this command.', ephemeral: true };
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(payload);
       } else {

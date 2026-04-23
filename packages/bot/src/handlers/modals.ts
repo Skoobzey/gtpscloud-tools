@@ -19,12 +19,12 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     if (action === 'modal_close') {
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
       if (!ticket) {
-        await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'Ticket not found.', ephemeral: true });
         return;
       }
 
       if (!isStaff && ticket.userId !== interaction.user.id) {
-        await interaction.reply({ content: 'You do not have permission to close this ticket.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: 'You do not have permission to close this ticket.', ephemeral: true });
         return;
       }
 
@@ -36,11 +36,11 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     if (action === 'modal_questions') {
       const cfg = await getOrCreateConfig(config.guildId);
       if (!cfg.ticketingEnabled) {
-        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: cfg.ticketingDisabledReason, ephemeral: true });
         return;
       }
 
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
 
       const category = await db.query.ticketCategories.findFirst({
         where: eq(ticketCategories.id, id),
@@ -74,7 +74,7 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     }
   } catch (err) {
     console.error('[Modal Error]', err);
-    const payload = { content: 'An error occurred.', flags: MessageFlags.Ephemeral };
+    const payload = { content: 'An error occurred.', ephemeral: true };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);
     } else {

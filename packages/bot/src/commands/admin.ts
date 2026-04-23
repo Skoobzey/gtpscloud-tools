@@ -1,4 +1,4 @@
-﻿import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 import type { Command } from '../client.js';
 import { db, tickets } from '@gtps/shared';
@@ -15,7 +15,7 @@ export const adminCommand: Command = {
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return;
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     const [total] = await db
       .select({ count: count() })
@@ -39,7 +39,7 @@ export const adminCommand: Command = {
 
     const embed = new EmbedBuilder()
       .setColor(config.brand.color)
-      .setTitle(`${config.brand.name} — Ticket Statistics`)
+      .setTitle(`${config.brand.name} � Ticket Statistics`)
       .addFields(
         { name: 'Total Tickets', value: String(total.count), inline: true },
         { name: 'Open', value: String(open.count), inline: true },
