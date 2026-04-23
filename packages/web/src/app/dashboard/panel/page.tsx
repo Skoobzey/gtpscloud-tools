@@ -18,6 +18,7 @@ export default function PanelPage() {
   const [panelTitle, setPanelTitle] = useState('GTPS Cloud Support');
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const isDirty = useRef(false);
   const [syncing, setSyncing] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -48,7 +49,7 @@ export default function PanelPage() {
     setChannels(guildData.channels ?? []);
     setCategories(catData.categories ?? []);
 
-    if (!working) {
+    if (!isDirty.current) {
       if (panelData.panelChannelId) setSelectedChannel(panelData.panelChannelId);
       if (panelData.panelMessage) setPanelMessage(panelData.panelMessage);
       if (panelData.panelTitle) setPanelTitle(panelData.panelTitle);
@@ -124,6 +125,7 @@ export default function PanelPage() {
       const ok = await refreshPanel();
       if (ok) {
         lastSyncedSnapshot.current = currentSnapshot;
+        isDirty.current = false;
       }
     }, 850);
 
@@ -149,6 +151,7 @@ export default function PanelPage() {
       setStatus({ panelChannelId: data.panelChannelId, panelMessageId: data.panelMessageId });
       setFeedback({ ok: true, msg: action === 'create' ? 'Panel created successfully.' : 'Panel refreshed successfully.' });
       lastSyncedSnapshot.current = currentSnapshot;
+      isDirty.current = false;
     } else {
       setFeedback({ ok: false, msg: data.error ?? 'Something went wrong.' });
     }
@@ -207,7 +210,7 @@ export default function PanelPage() {
               <input
                 type="text"
                 value={panelTitle}
-                onChange={(e) => setPanelTitle(e.target.value)}
+                onChange={(e) => { isDirty.current = true; setPanelTitle(e.target.value); }}
                 className="w-full bg-[#0a0a0a] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#22c55e] transition-colors"
                 placeholder="GTPS Cloud Support"
               />
@@ -217,7 +220,7 @@ export default function PanelPage() {
               <textarea
                 rows={3}
                 value={panelMessage}
-                onChange={(e) => setPanelMessage(e.target.value)}
+                onChange={(e) => { isDirty.current = true; setPanelMessage(e.target.value); }}
                 className="w-full bg-[#0a0a0a] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#22c55e] transition-colors resize-none"
                 placeholder="Select a category below and click the button to open a ticket."
               />
