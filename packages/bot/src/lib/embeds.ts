@@ -43,7 +43,7 @@ export function ticketOpenEmbed(
     .setTimestamp();
 }
 
-export function ticketControlRow(ticketId: number, claimedBy?: string | null) {
+export function ticketControlRow(ticketId: number, claimedBy?: string | null, status: Ticket['status'] = 'open') {
   const claimBtn = new ButtonBuilder()
     .setCustomId(`ticket_claim:${ticketId}`);
 
@@ -53,6 +53,19 @@ export function ticketControlRow(ticketId: number, claimedBy?: string | null) {
     claimBtn.setLabel('Claim').setStyle(ButtonStyle.Secondary).setEmoji('🙋');
   }
 
+  const holdBtn = new ButtonBuilder().setCustomId(`ticket_hold:${ticketId}`);
+  if (status === 'pending') {
+    holdBtn
+      .setLabel('Resume')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('▶️');
+  } else {
+    holdBtn
+      .setLabel('Hold')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('⏸️');
+  }
+
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`ticket_close:${ticketId}`)
@@ -60,6 +73,7 @@ export function ticketControlRow(ticketId: number, claimedBy?: string | null) {
       .setStyle(ButtonStyle.Danger)
       .setEmoji('🔒'),
     claimBtn,
+    holdBtn,
     new ButtonBuilder()
       .setCustomId(`ticket_transcript:${ticketId}`)
       .setLabel('Transcript')
@@ -71,7 +85,7 @@ export function ticketControlRow(ticketId: number, claimedBy?: string | null) {
 export function ticketClosedEmbed(ticket: Ticket, closerId: string) {
   return new EmbedBuilder()
     .setColor(config.brand.colorDanger)
-    .setTitle('🔒 Ticket Closed')
+    .setTitle('Ticket Closed')
     .addFields(
       { name: 'Closed by', value: `<@${closerId}>`, inline: true },
       ...(ticket.closeReason ? [{ name: 'Reason', value: ticket.closeReason, inline: false }] : []),
@@ -83,7 +97,7 @@ export function ticketClosedEmbed(ticket: Ticket, closerId: string) {
 export function ticketReopenedEmbed(reopenerUsername: string) {
   return new EmbedBuilder()
     .setColor(config.brand.color)
-    .setTitle('🔓 Ticket Reopened')
+    .setTitle('Ticket Reopened')
     .setDescription(`This ticket has been reopened by **${reopenerUsername}**.`)
     .setFooter({ text: config.brand.name })
     .setTimestamp();
@@ -92,7 +106,7 @@ export function ticketReopenedEmbed(reopenerUsername: string) {
 export function ticketClaimedEmbed(staffUsername: string) {
   return new EmbedBuilder()
     .setColor(config.brand.colorInfo)
-    .setTitle('🙋 Ticket Claimed')
+    .setTitle('Ticket Claimed')
     .setDescription(`This ticket has been claimed by **${staffUsername}**.`)
     .setFooter({ text: config.brand.name })
     .setTimestamp();
@@ -101,8 +115,26 @@ export function ticketClaimedEmbed(staffUsername: string) {
 export function ticketUnclaimedEmbed() {
   return new EmbedBuilder()
     .setColor(config.brand.colorMuted)
-    .setTitle('🙋 Ticket Unclaimed')
+    .setTitle('Ticket Unclaimed')
     .setDescription('This ticket is no longer claimed.')
+    .setFooter({ text: config.brand.name })
+    .setTimestamp();
+}
+
+export function ticketHeldEmbed(staffUsername: string) {
+  return new EmbedBuilder()
+    .setColor(config.brand.colorMuted)
+    .setTitle('Ticket On Hold')
+    .setDescription(`This ticket was placed on hold by **${staffUsername}**.`)
+    .setFooter({ text: config.brand.name })
+    .setTimestamp();
+}
+
+export function ticketResumedEmbed(staffUsername: string) {
+  return new EmbedBuilder()
+    .setColor(config.brand.color)
+    .setTitle('Ticket Resumed')
+    .setDescription(`This ticket was resumed by **${staffUsername}**.`)
     .setFooter({ text: config.brand.name })
     .setTimestamp();
 }

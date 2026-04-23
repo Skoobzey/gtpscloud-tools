@@ -1,4 +1,5 @@
-import type { StringSelectMenuInteraction } from 'discord.js';
+import { MessageFlags } from 'discord.js';
+import type { StringSelectMenuInteraction, InteractionReplyOptions } from 'discord.js';
 import {
   ModalBuilder,
   TextInputBuilder,
@@ -8,7 +9,7 @@ import {
 import { db, tickets, ticketCategories } from '@gtps/shared';
 import { eq, and } from 'drizzle-orm';
 import { isStaffMember } from '../lib/permissions.js';
-import { createTicket } from '../lib/tickets.js';
+import { createTicket, getOrCreateConfig } from '../lib/tickets.js';
 import { config } from '../config.js';
 
 export async function handleSelectMenu(interaction: StringSelectMenuInteraction) {
@@ -22,13 +23,19 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
 
   try {
     if (action === 'panel_select') {
+      const cfg = await getOrCreateConfig(config.guildId);
+      if (!cfg.ticketingEnabled) {
+        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        return;
+      }
+
       const categoryId = parseInt(interaction.values[0] ?? '0', 10);
 
       const category = await db.query.ticketCategories.findFirst({
         where: and(eq(ticketCategories.id, categoryId), eq(ticketCategories.isActive, true)),
       });
       if (!category) {
-        await interaction.reply({ content: 'Category not found or is inactive.', ephemeral: true });
+        await interaction.reply({ content: 'Category not found or is inactive.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -55,20 +62,23 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
         return;
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.update({ components: interaction.message.components });
       try {
         const { channel } = await createTicket(guild, member, categoryId);
-        await interaction.editReply({ content: `Your ticket has been created: <#${channel.id}>` });
+        await interaction.followUp({
+          content: `Your ticket has been created: <#${channel.id}>`,
+          flags: MessageFlags.Ephemeral,
+        });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Could not create ticket.';
-        await interaction.editReply({ content: msg });
+        await interaction.followUp({ content: msg, flags: MessageFlags.Ephemeral });
       }
       return;
     }
 
     if (action === 'ticket_priority') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can change ticket priority.', ephemeral: true });
+        await interaction.reply({ content: 'Only staff can change ticket priority.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -79,11 +89,11 @@ export async function handleSelectMenu(interaction: StringSelectMenuInteraction)
         .set({ priority: level, updatedAt: new Date() })
         .where(eq(tickets.id, id));
 
-      await interaction.reply({ content: `Priority updated to **${level}**.`, ephemeral: true });
+      await interaction.reply({ content: `Priority updated to **${level}**.`, flags: MessageFlags.Ephemeral });
     }
   } catch (err) {
     console.error('[SelectMenu Error]', err);
-    const payload = { content: 'An error occurred.', ephemeral: true };
+    const payload: InteractionReplyOptions = { content: 'An error occurred.', flags: ['Ephemeral'] };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);
     } else {

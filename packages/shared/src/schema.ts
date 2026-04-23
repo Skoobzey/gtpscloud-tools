@@ -70,9 +70,12 @@ export const verifications = pgTable('verifications', {
 export const guildConfig = pgTable('guild_config', {
   id: serial('id').primaryKey(),
   guildId: text('guild_id').notNull().unique(),
+  ticketingEnabled: boolean('ticketing_enabled').notNull().default(true),
+  ticketingDisabledReason: text('ticketing_disabled_reason').notNull().default('Ticketing is currently disabled. Please try again later.'),
   logChannelId: text('log_channel_id'),
   transcriptChannelId: text('transcript_channel_id'),
   staffRoleIds: text('staff_role_ids').array().notNull().default([]),
+  dashboardRoleIds: text('dashboard_role_ids').array().notNull().default([]),
   autoCloseHours: integer('auto_close_hours').notNull().default(48),
   maxOpenTickets: integer('max_open_tickets').notNull().default(3),
   panelChannelId: text('panel_channel_id'),

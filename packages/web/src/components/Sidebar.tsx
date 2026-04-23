@@ -8,7 +8,6 @@ import {
   Ticket,
   Settings,
   BarChart2,
-  Users,
   Tag,
   Layout,
   LogOut,
@@ -24,7 +23,6 @@ const navItems = [
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/dashboard/categories', label: 'Categories', icon: Tag },
   { href: '/dashboard/panel', label: 'Panel', icon: Layout },
-  { href: '/dashboard/staff', label: 'Staff', icon: Users },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -35,19 +33,15 @@ export function Sidebar() {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-[#27272a]">
-        <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center flex-shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </div>
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-[#1f312b]">
+        <img src="/logos/logo.png" alt="GTPS Cloud" className="w-8 h-8 rounded-lg object-cover border border-[#2f4c41] shadow-[0_0_22px_rgba(52,211,153,0.2)] flex-shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-white leading-tight">GTPS Cloud</p>
-          <p className="text-xs text-[#71717a]">Tools Dashboard</p>
+          <p className="text-[15px] leading-tight dash-title dash-glow text-[#dcfff1]">GTPS Cloud</p>
+          <p className="text-xs text-[#88a89b]">Operational Tools Dashboard</p>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
           return (
@@ -56,13 +50,13 @@ export function Sidebar() {
               href={href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors border',
                 isActive
-                  ? 'bg-[#22c55e]/10 text-[#22c55e]'
-                  : 'text-[#a1a1aa] hover:text-white hover:bg-[#18181b]',
+                  ? 'bg-[#34d399]/12 text-[#72f0c1] border-[#2c5a4a] shadow-[inset_0_0_0_1px_rgba(52,211,153,0.18)]'
+                  : 'text-[#9ab5aa] border-transparent hover:text-[#dcfff1] hover:bg-[#101a16] hover:border-[#233b33]',
               )}
             >
-              <Icon size={16} className="flex-shrink-0" />
+              <Icon size={15} className="flex-shrink-0" />
               {label}
             </Link>
           );
@@ -70,22 +64,21 @@ export function Sidebar() {
       </nav>
 
       {session?.user && (
-        <div className="border-t border-[#27272a] p-3">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
+        <div className="border-t border-[#1f312b] p-2.5">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl dash-surface">
             {session.user.image ? (
-              <img src={session.user.image} alt="" className="w-8 h-8 rounded-full flex-shrink-0" />
+              <img src={session.user.image} alt="" className="w-7 h-7 rounded-full flex-shrink-0" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#27272a] flex items-center justify-center text-xs font-semibold flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[#1a2b24] border border-[#29453a] flex items-center justify-center text-xs font-semibold flex-shrink-0">
                 {session.user.name?.[0]?.toUpperCase()}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{session.user.name}</p>
-              <p className="text-xs text-[#71717a] truncate">{session.user.email}</p>
+              <p className="text-[13px] font-medium text-[#dcfff1] truncate">{session.user.name}</p>
             </div>
             <button
               onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = '/'; } } })}
-              className="text-[#71717a] hover:text-white transition-colors p-1"
+              className="text-[#7e9a8f] hover:text-[#dcfff1] transition-colors p-1"
               aria-label="Sign out"
             >
               <LogOut size={14} />
@@ -99,7 +92,7 @@ export function Sidebar() {
   return (
     <>
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#111111] border border-[#27272a] rounded-lg text-[#a1a1aa]"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 dash-surface rounded-xl text-[#9ab5aa]"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
@@ -115,7 +108,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 h-full w-64 bg-[#111111] border-r border-[#27272a] z-40 transition-transform duration-200',
+          'fixed left-0 top-0 h-full w-64 bg-[#0b1310]/95 border-r border-[#1f312b] z-40 transition-transform duration-200',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
       >

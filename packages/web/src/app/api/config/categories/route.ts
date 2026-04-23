@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ticketCategories } from '@gtps/shared';
 import { eq, and } from 'drizzle-orm';
+import { queueTrackedPanelSync } from '@/lib/panel-sync';
 
 const GUILD_ID = process.env.GUILD_ID ?? '1347199940920606730';
 
@@ -29,5 +30,6 @@ export async function POST(request: Request) {
       questions: body.questions ?? [],
     })
     .returning();
+  queueTrackedPanelSync().catch(() => {});
   return NextResponse.json({ category }, { status: 201 });
 }

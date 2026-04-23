@@ -9,6 +9,7 @@ export const config = {
   token: process.env.DISCORD_TOKEN!,
   clientId: process.env.DISCORD_CLIENT_ID!,
   guildId: process.env.GUILD_ID ?? '1347199940920606730',
+  webBaseUrl: (process.env.WEB_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, ''),
   brand: {
     name: 'GTPS Cloud',
     color: 0x22c55e,

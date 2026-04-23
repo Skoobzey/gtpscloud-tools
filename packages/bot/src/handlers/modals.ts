@@ -1,8 +1,10 @@
+import { MessageFlags } from 'discord.js';
 import type { ModalSubmitInteraction } from 'discord.js';
 import { isStaffMember } from '../lib/permissions.js';
-import { closeTicket, createTicket } from '../lib/tickets.js';
+import { closeTicket, createTicket, getOrCreateConfig } from '../lib/tickets.js';
 import { db, tickets, ticketCategories } from '@gtps/shared';
 import { eq } from 'drizzle-orm';
+import { config } from '../config.js';
 
 export async function handleModal(interaction: ModalSubmitInteraction) {
   if (!interaction.guild) return;
@@ -17,12 +19,12 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     if (action === 'modal_close') {
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
       if (!ticket) {
-        await interaction.reply({ content: 'Ticket not found.', ephemeral: true });
+        await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral });
         return;
       }
 
       if (!isStaff && ticket.userId !== interaction.user.id) {
-        await interaction.reply({ content: 'You do not have permission to close this ticket.', ephemeral: true });
+        await interaction.reply({ content: 'You do not have permission to close this ticket.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -32,7 +34,13 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     }
 
     if (action === 'modal_questions') {
-      await interaction.deferReply({ ephemeral: true });
+      const cfg = await getOrCreateConfig(config.guildId);
+      if (!cfg.ticketingEnabled) {
+        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        return;
+      }
+
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const category = await db.query.ticketCategories.findFirst({
         where: eq(ticketCategories.id, id),
@@ -66,7 +74,7 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     }
   } catch (err) {
     console.error('[Modal Error]', err);
-    const payload = { content: 'An error occurred.', ephemeral: true };
+    const payload = { content: 'An error occurred.', flags: MessageFlags.Ephemeral };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);
     } else {

@@ -15,7 +15,16 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const body = await request.json();
-  const allowed = ['staffRoleIds', 'logChannelId', 'transcriptChannelId', 'autoCloseHours', 'maxOpenTickets'];
+  const allowed = [
+    'ticketingEnabled',
+    'ticketingDisabledReason',
+    'staffRoleIds',
+    'dashboardRoleIds',
+    'logChannelId',
+    'transcriptChannelId',
+    'autoCloseHours',
+    'maxOpenTickets',
+  ];
   const update: Record<string, unknown> = { updatedAt: new Date() };
 
   for (const key of allowed) {

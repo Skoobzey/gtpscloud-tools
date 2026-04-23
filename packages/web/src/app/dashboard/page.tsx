@@ -23,10 +23,11 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Overview</h1>
-        <p className="text-[#71717a] text-sm mt-1">GTPS Cloud tools dashboard</p>
+    <div className="space-y-6">
+      <div className="dash-surface rounded-2xl p-5 lg:p-6">
+        <p className="text-xs uppercase tracking-[0.24em] text-[#6d8d7f] mb-2">Control Room</p>
+        <h1 className="text-[30px] dash-title dash-glow text-[#e9fff5] leading-tight">Support Operations</h1>
+        <p className="text-[#90ab9f] text-sm mt-1.5">Real-time visibility across tickets, response workload, and urgent queue health.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -37,42 +38,42 @@ export default async function DashboardPage() {
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Recent Tickets</h2>
-          <Link href="/dashboard/tickets" className="text-sm text-[#22c55e] hover:text-[#16a34a] font-medium transition-colors">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg dash-title text-[#dcfff1]">Recent Tickets</h2>
+          <Link href="/dashboard/tickets" className="text-sm text-[#72f0c1] hover:text-[#43d79d] font-medium transition-colors">
             View all →
           </Link>
         </div>
-        <div className="border border-[#27272a] rounded-xl overflow-hidden">
+        <div className="dash-surface rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#27272a] bg-[#111111]">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#71717a] uppercase tracking-wide">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#71717a] uppercase tracking-wide">Category</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#71717a] uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#71717a] uppercase tracking-wide">Priority</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#71717a] uppercase tracking-wide">Opened</th>
+              <tr className="border-b border-[#1f312b] bg-[#0f1815]">
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#7f9f92] uppercase tracking-wide">#</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#7f9f92] uppercase tracking-wide">Category</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#7f9f92] uppercase tracking-wide">Status</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#7f9f92] uppercase tracking-wide">Priority</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#7f9f92] uppercase tracking-wide">Opened</th>
               </tr>
             </thead>
             <tbody>
               {recent.map((ticket) => (
-                <tr key={ticket.id} className="border-b border-[#27272a] last:border-0 bg-[#0a0a0a] hover:bg-[#111111] transition-colors">
-                  <td className="px-4 py-3">
-                    <Link href={`/dashboard/tickets/${ticket.id}`} className="text-[#22c55e] font-mono font-medium hover:underline">
+                <tr key={ticket.id} className="border-b border-[#1f312b] last:border-0 bg-[#0a120f] hover:bg-[#0f1a15] transition-colors">
+                  <td className="px-4 py-2.5">
+                    <Link href={`/dashboard/tickets/${ticket.id}`} className="text-[#67e8b1] font-mono font-medium hover:underline">
                       #{String(ticket.ticketNumber).padStart(4, '0')}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-[#d4d4d8]">
+                  <td className="px-4 py-2.5 text-[#d5eee3]">
                     {ticket.category ? `${ticket.category.emoji} ${ticket.category.name}` : '—'}
                   </td>
-                  <td className="px-4 py-3"><Badge variant="status" value={ticket.status} /></td>
-                  <td className="px-4 py-3"><Badge variant="priority" value={ticket.priority} /></td>
-                  <td className="px-4 py-3 text-[#71717a]">{formatRelative(ticket.createdAt)}</td>
+                  <td className="px-4 py-2.5"><Badge variant="status" value={ticket.status} /></td>
+                  <td className="px-4 py-2.5"><Badge variant="priority" value={ticket.priority} /></td>
+                  <td className="px-4 py-2.5 text-[#88a79a]">{formatRelative(ticket.createdAt)}</td>
                 </tr>
               ))}
               {recent.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[#52525b]">No tickets yet.</td>
+                  <td colSpan={5} className="px-4 py-10 text-center text-[#6f8b7f]">No tickets yet.</td>
                 </tr>
               )}
             </tbody>

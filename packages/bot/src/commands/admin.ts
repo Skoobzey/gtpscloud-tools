@@ -1,4 +1,4 @@
-﻿import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } from 'discord.js';
+﻿import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 import type { Command } from '../client.js';
 import { db, tickets } from '@gtps/shared';
@@ -15,7 +15,7 @@ export const adminCommand: Command = {
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return;
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const [total] = await db
       .select({ count: count() })

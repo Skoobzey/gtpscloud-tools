@@ -2,8 +2,13 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GTPS Cloud — Support',
-  description: 'GTPS Cloud ticket management dashboard',
+  title: 'GTPS Cloud Tools',
+  description: 'GTPS Cloud Operational Tools Dashboard',
+  icons: {
+    icon: '/logos/logo.png',
+    shortcut: '/logos/logo.png',
+    apple: '/logos/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

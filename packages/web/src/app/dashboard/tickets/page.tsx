@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/Badge';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 type TicketRow = {
   id: number;
@@ -15,6 +16,19 @@ type TicketRow = {
   createdAt: string;
   category: { name: string; emoji: string } | null;
 };
+
+const STATUS_OPTIONS = [
+  { value: 'open', label: 'Open' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'closed', label: 'Closed' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' },
+];
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -66,27 +80,20 @@ export default function TicketsPage() {
             className="w-full bg-[#111111] border border-[#27272a] rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-[#52525b] focus:outline-none focus:border-[#22c55e] transition-colors"
           />
         </div>
-        <select
+        <CustomSelect
+          options={STATUS_OPTIONS}
           value={status}
-          onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          className="bg-[#111111] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#22c55e] transition-colors"
-        >
-          <option value="">All Statuses</option>
-          <option value="open">Open</option>
-          <option value="pending">Pending</option>
-          <option value="closed">Closed</option>
-        </select>
-        <select
+          onChange={(v) => { setStatus(v); setPage(1); }}
+          placeholder="All Statuses"
+          className="min-w-[170px]"
+        />
+        <CustomSelect
+          options={PRIORITY_OPTIONS}
           value={priority}
-          onChange={(e) => { setPriority(e.target.value); setPage(1); }}
-          className="bg-[#111111] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#22c55e] transition-colors"
-        >
-          <option value="">All Priorities</option>
-          <option value="low">Low</option>
-          <option value="normal">Normal</option>
-          <option value="high">High</option>
-          <option value="urgent">Urgent</option>
-        </select>
+          onChange={(v) => { setPriority(v); setPage(1); }}
+          placeholder="All Priorities"
+          className="min-w-[170px]"
+        />
       </div>
 
       <div className="border border-[#27272a] rounded-xl overflow-hidden">

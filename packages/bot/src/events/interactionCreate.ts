@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import type { Interaction } from 'discord.js';
 import { commands } from '../client.js';
 import { config } from '../config.js';
@@ -15,7 +16,7 @@ export async function interactionCreate(interaction: Interaction) {
       await command.execute(interaction);
     } catch (err) {
       console.error(`[Command Error] ${interaction.commandName}:`, err);
-      const payload = { content: 'An error occurred while executing this command.', ephemeral: true };
+      const payload = { content: 'An error occurred while executing this command.', flags: MessageFlags.Ephemeral };
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(payload);
       } else {

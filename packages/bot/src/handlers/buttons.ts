@@ -1,5 +1,6 @@
-import type { ButtonInteraction } from 'discord.js';
+import type { ButtonInteraction, InteractionReplyOptions } from 'discord.js';
 import {
+  MessageFlags,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -14,10 +15,13 @@ import {
   deleteTicket,
   claimTicket,
   unclaimTicket,
+  holdTicket,
+  resumeTicket,
+  getOrCreateConfig,
 } from '../lib/tickets.js';
 import { createTicket } from '../lib/tickets.js';
-import { generateTranscript } from '../lib/transcripts.js';
 import { config } from '../config.js';
+import { buildTranscriptUrl } from '../lib/transcript-link.js';
 
 export async function handleButton(interaction: ButtonInteraction) {
   if (!interaction.guild) return;
@@ -30,12 +34,17 @@ export async function handleButton(interaction: ButtonInteraction) {
 
   try {
     if (action === 'ticket_create') {
-      // Fetch category to check for questions
+      const cfg = await getOrCreateConfig(config.guildId);
+      if (!cfg.ticketingEnabled) {
+        await interaction.reply({ content: cfg.ticketingDisabledReason, flags: MessageFlags.Ephemeral });
+        return;
+      }
+
       const category = await db.query.ticketCategories.findFirst({
         where: and(eq(ticketCategories.id, id), eq(ticketCategories.isActive, true)),
       });
       if (!category) {
-        await interaction.reply({ content: 'Category not found or is inactive.', ephemeral: true });
+        await interaction.reply({ content: 'Category not found or is inactive.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -62,7 +71,7 @@ export async function handleButton(interaction: ButtonInteraction) {
         return;
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         const { channel } = await createTicket(guild, member, id);
         await interaction.editReply({ content: `Your ticket has been created: <#${channel.id}>` });
@@ -93,7 +102,7 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_reopen') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can reopen tickets.', ephemeral: true });
+        await interaction.reply({ content: 'Only staff can reopen tickets.', flags: MessageFlags.Ephemeral });
         return;
       }
       await interaction.deferUpdate();
@@ -103,17 +112,17 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (action === 'ticket_delete') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can delete tickets.', ephemeral: true });
+        await interaction.reply({ content: 'Only staff can delete tickets.', flags: MessageFlags.Ephemeral });
         return;
       }
-      await interaction.reply({ content: 'Deleting ticket…', ephemeral: true });
+      await interaction.reply({ content: 'Deleting ticket…', flags: MessageFlags.Ephemeral });
       await deleteTicket(id, interaction.user.id, guild);
       return;
     }
 
     if (action === 'ticket_claim') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can claim tickets.', ephemeral: true });
+        await interaction.reply({ content: 'Only staff can claim tickets.', flags: MessageFlags.Ephemeral });
         return;
       }
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
@@ -127,31 +136,43 @@ export async function handleButton(interaction: ButtonInteraction) {
       return;
     }
 
-    if (action === 'ticket_transcript') {
+    if (action === 'ticket_hold') {
       if (!isStaff) {
-        await interaction.reply({ content: 'Only staff can generate transcripts.', ephemeral: true });
+        await interaction.reply({ content: 'Only staff can hold or resume tickets.', flags: MessageFlags.Ephemeral });
         return;
       }
-      await interaction.deferReply({ ephemeral: true });
+      const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
+      if (!ticket) {
+        await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral });
+        return;
+      }
+      await interaction.deferUpdate();
+      if (ticket.status === 'pending') {
+        await resumeTicket(id, interaction.user.id, interaction.user.username, guild);
+      } else {
+        await holdTicket(id, interaction.user.id, interaction.user.username, guild);
+      }
+      return;
+    }
+
+    if (action === 'ticket_transcript') {
+      if (!isStaff) {
+        await interaction.reply({ content: 'Only staff can generate transcripts.', flags: MessageFlags.Ephemeral });
+        return;
+      }
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
       if (!ticket) {
         await interaction.editReply({ content: 'Ticket not found.' });
         return;
       }
-      const buffer = await generateTranscript(id, guild);
-      if (!buffer) {
-        await interaction.editReply({ content: 'No messages to generate a transcript from.' });
-        return;
-      }
-      await interaction.editReply({
-        content: 'Here is the transcript:',
-        files: [{ attachment: buffer, name: `transcript-${ticket.ticketNumber}.html` }],
-      });
+      const transcriptUrl = buildTranscriptUrl(id);
+      await interaction.editReply({ content: `Transcript link: ${transcriptUrl}` });
       return;
     }
   } catch (err) {
     console.error('[Button Error]', err);
-    const payload = { content: 'An error occurred.', ephemeral: true };
+    const payload: InteractionReplyOptions = { content: 'An error occurred.', flags: ['Ephemeral'] };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);
     } else {

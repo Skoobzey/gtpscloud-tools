@@ -16,11 +16,7 @@ export default function LandingPage() {
     <main className="min-h-screen flex items-center justify-center bg-[#09090b]">
       <div className="w-full max-w-md mx-auto px-6">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#22c55e] mb-6">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </div>
+          <img src="/logos/logo.png" alt="GTPS Cloud" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6 border border-[#2f4c41] shadow-[0_0_24px_rgba(52,211,153,0.22)]" />
           <h1 className="text-3xl font-bold text-white mb-2">GTPS Cloud</h1>
           <p className="text-[#a1a1aa] text-base">Tools Dashboard</p>
         </div>

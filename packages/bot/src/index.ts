@@ -13,7 +13,7 @@ commands.set(panelCommand.data.name, panelCommand);
 commands.set(adminCommand.data.name, adminCommand);
 commands.set(itemImgCommand.data.name, itemImgCommand);
 
-client.once('ready', ready);
+client.once('clientReady', ready);
 client.on('interactionCreate', interactionCreate);
 client.on('messageCreate', messageCreate);
 

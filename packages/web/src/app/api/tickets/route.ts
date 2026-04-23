@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { tickets } from '@gtps/shared';
-import { eq, and, sql, like, ilike, count, desc } from 'drizzle-orm';
+import { eq, and, sql, ilike, count, desc } from 'drizzle-orm';
 
 const GUILD_ID = process.env.GUILD_ID ?? '1347199940920606730';
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
   const offset = (page - 1) * limit;
-  const search = searchParams.get('search') ?? '';
+  const search = (searchParams.get('search') ?? '').trim();
   const status = searchParams.get('status') ?? '';
   const priority = searchParams.get('priority') ?? '';
 
@@ -18,6 +18,12 @@ export async function GET(request: NextRequest) {
 
   if (status) conditions.push(eq(tickets.status, status as 'open' | 'pending' | 'closed' | 'deleted'));
   if (priority) conditions.push(eq(tickets.priority, priority as 'low' | 'normal' | 'high' | 'urgent'));
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(
+      sql`(${tickets.ticketNumber}::text ILIKE ${pattern} OR ${ilike(tickets.userId, pattern)})`,
+    );
+  }
 
   const where = and(...conditions);
 

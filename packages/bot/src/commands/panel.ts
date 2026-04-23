@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, TextChannel, MessageFlags } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 import type { Command } from '../client.js';
 import { db, ticketCategories, guildConfig } from '@gtps/shared';
@@ -38,7 +38,7 @@ export const panelCommand: Command = {
     if (!activeCategories.length) {
       await interaction.reply({
         content: 'No active ticket categories found. Use `/admin category` to create categories first.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -46,7 +46,7 @@ export const panelCommand: Command = {
     if (sub === 'create') {
       const targetChannel = (interaction.options.getChannel('channel') ?? interaction.channel) as TextChannel;
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const cfg2 = await db.query.guildConfig.findFirst({ where: eq(guildConfig.guildId, config.guildId) });
       const embed = panelEmbed(activeCategories, cfg2?.panelMessage, cfg2?.panelTitle);
@@ -71,7 +71,7 @@ export const panelCommand: Command = {
     }
 
     if (sub === 'refresh') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const cfg = await db.query.guildConfig.findFirst({
         where: eq(guildConfig.guildId, config.guildId),

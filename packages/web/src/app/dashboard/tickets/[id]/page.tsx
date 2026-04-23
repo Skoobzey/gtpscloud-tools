@@ -1,11 +1,53 @@
 import { db } from '@/lib/db';
-import { tickets, ticketMessages } from '@gtps/shared';
+import { tickets, ticketMessages, guildConfig } from '@gtps/shared';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/Badge';
 import { formatDate } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
+const BOT_TOKEN = process.env.DISCORD_TOKEN;
+const GUILD_ID = process.env.GUILD_ID ?? '1347199940920606730';
+
+type DiscordRole = { id: string; name: string; position: number };
+type DiscordMember = { roles?: string[] };
+
+async function resolveStaffRoleLabels(authorIds: string[], allowedRoleIds: string[]) {
+  const labels = new Map<string, string>();
+  if (!BOT_TOKEN || !authorIds.length || !allowedRoleIds.length) return labels;
+
+  const rolesRes = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/roles`, {
+    headers: { Authorization: `Bot ${BOT_TOKEN}` },
+    cache: 'no-store',
+  }).catch(() => null);
+  if (!rolesRes?.ok) return labels;
+
+  const roles = (await rolesRes.json().catch(() => [])) as DiscordRole[];
+  const allowedRoleSet = new Set(allowedRoleIds);
+  const allowedRoles = roles
+    .filter((r) => allowedRoleSet.has(r.id))
+    .sort((a, b) => b.position - a.position);
+
+  if (!allowedRoles.length) return labels;
+
+  for (const authorId of authorIds) {
+    const memberRes = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${authorId}`, {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+      cache: 'no-store',
+    }).catch(() => null);
+    if (!memberRes?.ok) continue;
+
+    const member = (await memberRes.json().catch(() => null)) as DiscordMember | null;
+    if (!member?.roles?.length) continue;
+
+    const roleIdSet = new Set(member.roles);
+    const matched = allowedRoles.find((role) => roleIdSet.has(role.id));
+    if (matched) labels.set(authorId, matched.name);
+  }
+
+  return labels;
+}
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,6 +65,13 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     where: eq(ticketMessages.ticketId, ticketId),
     orderBy: (m, { asc }) => [asc(m.createdAt)],
   });
+
+  const cfg = await db.query.guildConfig.findFirst({ where: eq(guildConfig.guildId, GUILD_ID) });
+  const allowedStaffRoleIds = Array.from(
+    new Set([...(cfg?.staffRoleIds ?? []), ...(ticket.category?.staffRoleIds ?? [])]),
+  );
+  const staffAuthorIds = Array.from(new Set(messages.filter((m) => m.isStaff).map((m) => m.authorId)));
+  const staffRoleLabels = await resolveStaffRoleLabels(staffAuthorIds, allowedStaffRoleIds);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -88,6 +137,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <p className="text-[#52525b] text-sm text-center py-10">No messages recorded.</p>
           ) : (
             messages.map((msg) => (
+              (() => {
+                const staffRole = msg.isStaff ? staffRoleLabels.get(msg.authorId) ?? 'Staff' : null;
+                return (
               <div
                 key={msg.id}
                 className={`flex gap-3 px-4 py-3 rounded-lg hover:bg-[#111111] transition-colors ${msg.isStaff ? 'border-l-2 border-[#22c55e]' : ''}`}
@@ -104,8 +156,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                     <span className={`text-sm font-semibold ${msg.isStaff ? 'text-[#22c55e]' : 'text-white'}`}>
                       {msg.authorUsername}
                     </span>
-                    {msg.isStaff && (
-                      <span className="text-xs bg-[#22c55e]/10 text-[#22c55e] px-1.5 py-0.5 rounded font-medium">Staff</span>
+                    {staffRole && (
+                      <span className="text-xs bg-[#22c55e]/10 text-[#22c55e] px-1.5 py-0.5 rounded font-medium">{staffRole}</span>
                     )}
                     <span className="text-xs text-[#52525b]">{formatDate(msg.createdAt)}</span>
                   </div>
@@ -129,6 +181,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   )}
                 </div>
               </div>
+                );
+              })()
             ))
           )}
         </div>

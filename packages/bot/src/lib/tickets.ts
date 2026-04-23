@@ -14,10 +14,12 @@ import {
   ticketReopenedEmbed,
   ticketClaimedEmbed,
   ticketUnclaimedEmbed,
+  ticketHeldEmbed,
+  ticketResumedEmbed,
   logEmbed,
   reopenDeleteRow,
 } from './embeds.js';
-import { generateTranscript } from './transcripts.js';
+import { buildTranscriptUrl } from './transcript-link.js';
 
 export async function getOrCreateConfig(guildId: string) {
   let cfg = await db.query.guildConfig.findFirst({
@@ -126,7 +128,7 @@ export async function createTicket(
     .returning();
 
   const embed = ticketOpenEmbed(ticket, category, member.user.username);
-  const controlRow = ticketControlRow(ticket.id);
+  const controlRow = ticketControlRow(ticket.id, ticket.claimedBy, ticket.status);
 
   const openMsg = await channel.send({
     content: `<@${member.id}> ${category.staffRoleIds.map((id) => `<@&${id}>`).join(' ')}`,
@@ -176,7 +178,7 @@ export async function updateOpenEmbed(ticketId: number, guild: Guild) {
   try {
     const msg = await channel.messages.fetch(ticket.openMessageId);
     const embed = ticketOpenEmbed(ticket, category, username, { claimedByUsername, participantIds });
-    const controlRow = ticketControlRow(ticketId, ticket.claimedBy);
+    const controlRow = ticketControlRow(ticketId, ticket.claimedBy, ticket.status);
     await msg.edit({ embeds: [embed], components: [controlRow] });
   } catch { /* message may have been deleted */ }
 }
@@ -207,7 +209,6 @@ export async function closeTicket(
     SendMessages: false,
   });
 
-  // Remove control buttons from the original opening message
   if (ticket.openMessageId) {
     try {
       const openMsg = await channel.messages.fetch(ticket.openMessageId);
@@ -227,22 +228,22 @@ export async function closeTicket(
   ]);
 
   if (cfg.transcriptChannelId) {
-    const transcriptBuffer = await generateTranscript(ticket.id, guild);
-    if (transcriptBuffer) {
-      const transcriptChannel = guild.channels.cache.get(cfg.transcriptChannelId) as TextChannel | undefined;
-      if (transcriptChannel) {
-        await transcriptChannel.send({
-          embeds: [
-            logEmbed(
-              '📄 Transcript Saved',
-              `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** — <@${ticket.userId}>`,
-              config.brand.colorInfo,
-              category ? [{ name: 'Category', value: category.name, inline: true }] : undefined,
-            ),
-          ],
-          files: [{ attachment: transcriptBuffer, name: `transcript-${ticket.ticketNumber}.html` }],
-        });
-      }
+    const transcriptChannel = guild.channels.cache.get(cfg.transcriptChannelId) as TextChannel | undefined;
+    if (transcriptChannel) {
+      const transcriptUrl = buildTranscriptUrl(ticket.id);
+      await transcriptChannel.send({
+        embeds: [
+          logEmbed(
+            'Transcript Saved',
+            `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** — <@${ticket.userId}>`,
+            config.brand.colorInfo,
+            [
+              ...(category ? [{ name: 'Category', value: category.name, inline: true }] : []),
+              { name: 'Transcript', value: `[View Transcript](${transcriptUrl})`, inline: false },
+            ],
+          ),
+        ],
+      });
     }
   }
 
@@ -267,7 +268,6 @@ export async function reopenTicket(ticketId: number, reopenedBy: string, guild: 
     ViewChannel: true,
   });
 
-  // Restore control buttons on the opening message
   if (ticket.openMessageId) {
     try {
       const openMsg = await channel.messages.fetch(ticket.openMessageId);
@@ -275,7 +275,7 @@ export async function reopenTicket(ticketId: number, reopenedBy: string, guild: 
     } catch { /* ignore */ }
   }
 
-  await channel.send({ embeds: [ticketReopenedEmbed(reopenedBy)], components: [ticketControlRow(ticketId)] });
+  await channel.send({ embeds: [ticketReopenedEmbed(reopenedBy)], components: [ticketControlRow(ticketId, ticket.claimedBy, 'open')] });
 
   const cfg = await getOrCreateConfig(config.guildId);
   await sendLog(guild, cfg.logChannelId, 'Ticket Reopened', `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** was reopened by <@${reopenedBy}>`, config.brand.color, [
@@ -291,36 +291,17 @@ export async function deleteTicket(ticketId: number, deletedBy: string, guild: G
 
   const cfg = await getOrCreateConfig(config.guildId);
 
-  if (cfg.transcriptChannelId) {
-    const transcriptBuffer = await generateTranscript(ticket.id, guild);
-    if (transcriptBuffer) {
-      const transcriptChannel = guild.channels.cache.get(cfg.transcriptChannelId) as TextChannel | undefined;
-      if (transcriptChannel) {
-        await transcriptChannel.send({
-          embeds: [
-            logEmbed(
-              '📄 Transcript — Ticket Deleted',
-              `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** — <@${ticket.userId}> (deleted by <@${deletedBy}>)`,
-              config.brand.colorDanger,
-            ),
-          ],
-          files: [{ attachment: transcriptBuffer, name: `transcript-${ticket.ticketNumber}.html` }],
-        });
-      }
-    }
-  }
-
   await db.update(tickets).set({ status: 'deleted', updatedAt: new Date() }).where(eq(tickets.id, ticketId));
 
   const channel = guild.channels.cache.get(ticket.channelId);
   if (channel) await channel.delete(`Ticket deleted by ${deletedBy}`);
 
-  await sendLog(guild, cfg.logChannelId, '🗑️ Ticket Deleted', `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** was permanently deleted by <@${deletedBy}>`, config.brand.colorDanger);
+  await sendLog(guild, cfg.logChannelId, 'Ticket Deleted', `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** was permanently deleted by <@${deletedBy}>`, config.brand.colorDanger);
 }
 
 export async function claimTicket(ticketId: number, staffId: string, staffUsername: string, guild: Guild) {
   const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
-  if (!ticket || ticket.status !== 'open') return null;
+  if (!ticket || (ticket.status !== 'open' && ticket.status !== 'pending')) return null;
 
   const [updated] = await db
     .update(tickets)
@@ -335,6 +316,66 @@ export async function claimTicket(ticketId: number, staffId: string, staffUserna
   }
 
   await updateOpenEmbed(ticketId, guild);
+
+  return updated;
+}
+
+export async function holdTicket(ticketId: number, staffId: string, staffUsername: string, guild: Guild) {
+  const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+  if (!ticket || ticket.status !== 'open') return null;
+
+  const [updated] = await db
+    .update(tickets)
+    .set({ status: 'pending', updatedAt: new Date() })
+    .where(eq(tickets.id, ticketId))
+    .returning();
+
+  const channel = guild.channels.cache.get(ticket.channelId) as TextChannel | undefined;
+  if (channel) {
+    await channel.send({ embeds: [ticketHeldEmbed(staffUsername)] });
+  }
+
+  await updateOpenEmbed(ticketId, guild);
+
+  const cfg = await getOrCreateConfig(config.guildId);
+  await sendLog(
+    guild,
+    cfg.logChannelId,
+    'Ticket Put On Hold',
+    `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** was put on hold by <@${staffId}>`,
+    config.brand.colorMuted,
+    [{ name: 'Channel', value: `<#${ticket.channelId}>`, inline: true }],
+  );
+
+  return updated;
+}
+
+export async function resumeTicket(ticketId: number, staffId: string, staffUsername: string, guild: Guild) {
+  const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+  if (!ticket || ticket.status !== 'pending') return null;
+
+  const [updated] = await db
+    .update(tickets)
+    .set({ status: 'open', updatedAt: new Date() })
+    .where(eq(tickets.id, ticketId))
+    .returning();
+
+  const channel = guild.channels.cache.get(ticket.channelId) as TextChannel | undefined;
+  if (channel) {
+    await channel.send({ embeds: [ticketResumedEmbed(staffUsername)] });
+  }
+
+  await updateOpenEmbed(ticketId, guild);
+
+  const cfg = await getOrCreateConfig(config.guildId);
+  await sendLog(
+    guild,
+    cfg.logChannelId,
+    'Ticket Resumed',
+    `Ticket **#${String(ticket.ticketNumber).padStart(4, '0')}** was resumed by <@${staffId}>`,
+    config.brand.color,
+    [{ name: 'Channel', value: `<#${ticket.channelId}>`, inline: true }],
+  );
 
   return updated;
 }

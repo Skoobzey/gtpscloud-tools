@@ -10,8 +10,8 @@ export function NumberInput({ className = '', ...props }: Props) {
       type="number"
       {...props}
       className={`
-        w-full bg-[#0a0a0a] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white
-        focus:outline-none focus:border-[#22c55e] transition-colors
+        w-full bg-[#0f1a15] border border-[#274137] rounded-xl px-3 py-2 text-sm text-[#e8fff5]
+        placeholder:text-[#7a998b] focus:outline-none focus:border-[#4ade80] focus:ring-2 focus:ring-[#34d399]/20 transition-colors
         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
         ${className}
       `}

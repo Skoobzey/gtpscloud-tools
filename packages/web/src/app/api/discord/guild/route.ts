@@ -18,8 +18,10 @@ export async function GET() {
       discordFetch(`/guilds/${GUILD_ID}/roles`),
     ]);
 
+    const textLikeChannelTypes = new Set([0, 5, 15, 16]);
+
     const textChannels = (channels as Array<{ id: string; name: string; type: number }>)
-      .filter((c) => c.type === 0)
+      .filter((c) => textLikeChannelTypes.has(c.type))
       .map((c) => ({ id: c.id, name: c.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -35,6 +37,6 @@ export async function GET() {
 
     return NextResponse.json({ channels: textChannels, discordCategories, roles: filteredRoles });
   } catch {
-    return NextResponse.json({ channels: [], roles: [] }, { status: 500 });
+    return NextResponse.json({ channels: [], discordCategories: [], roles: [] }, { status: 500 });
   }
 }

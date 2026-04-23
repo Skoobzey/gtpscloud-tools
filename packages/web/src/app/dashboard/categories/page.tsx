@@ -1,11 +1,13 @@
 ﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Check, X, GripVertical, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { EmojiPicker } from '@/components/ui/EmojiPicker';
 import { DiscordEmbed } from '@/components/ui/DiscordEmbed';
 import { ColorPicker } from '@/components/ui/ColorPicker';
+import { CustomSelect } from '@/components/ui/CustomSelect';
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 
 type GuildRole = { id: string; name: string; color: number };
 type GuildChannel = { id: string; name: string };
@@ -67,26 +69,14 @@ function RolePicker({ roles, selected, onChange }: { roles: GuildRole[]; selecte
 }
 
 function ChannelSelect({ channels, value, onChange, prefix = '#' }: { channels: GuildChannel[]; value: string; onChange: (v: string) => void; prefix?: string }) {
-  const [open, setOpen] = useState(false);
-  const sel = channels.find((c) => c.id === value);
+  const options = channels.map((c) => ({
+    value: c.id,
+    label: c.name,
+    prefix,
+  }));
+
   return (
-    <div className="relative">
-      <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center justify-between gap-2 bg-[#0a0a0a] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-left hover:border-[#3f3f46] focus:outline-none focus:border-[#22c55e] transition-colors">
-        <span className={sel ? 'text-white' : 'text-[#52525b]'}>{sel ? prefix + sel.name : 'Not set'}</span>
-        <ChevronDown size={14} className="text-[#71717a] flex-shrink-0" />
-      </button>
-      {open && (
-        <div className="absolute z-10 top-full mt-1 w-full bg-[#18181b] border border-[#27272a] rounded-lg shadow-xl max-h-48 overflow-y-auto">
-          <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#52525b] hover:bg-[#27272a] transition-colors">Not set</button>
-          {channels.map((c) => (
-            <button key={c.id} type="button" onClick={() => { onChange(c.id); setOpen(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[#27272a] transition-colors">
-              <span className="w-4 flex items-center justify-center">{value === c.id && <Check size={12} className="text-[#22c55e]" strokeWidth={3} />}</span>
-              <span className="text-white">{prefix}{c.name}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <CustomSelect options={options} value={value} onChange={onChange} placeholder="Not set" />
   );
 }
 
@@ -118,7 +108,7 @@ export default function CategoriesPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState<FormState>({ name: '', description: '', emoji: '🎫', welcomeMessage: DEFAULT_WELCOME, categoryChannelId: '', staffRoleIds: [], color: '#22c55e', questions: [] });
   const [saving, setSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [togglingIds, setTogglingIds] = useState<number[]>([]);
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -145,7 +135,6 @@ export default function CategoriesPage() {
     setEditing(null);
     setForm({ name: '', description: '', emoji: '🎫', welcomeMessage: DEFAULT_WELCOME, categoryChannelId: '', staffRoleIds: [], color: '#22c55e', questions: [] });
     setShowForm(true);
-    setShowPreview(false);
   };
 
   const openEdit = (cat: Category) => {
@@ -161,7 +150,6 @@ export default function CategoriesPage() {
       questions: (cat.questions ?? []) as Question[],
     });
     setShowForm(true);
-    setShowPreview(false);
   };
 
   const saveCategory = async () => {
@@ -188,9 +176,28 @@ export default function CategoriesPage() {
     fetchCategories();
   };
 
-  const toggleCategory = async (id: number) => {
-    await fetch(`/api/config/categories/${id}/toggle`, { method: 'POST' });
-    fetchCategories();
+  const toggleCategory = async (id: number, nextIsActive: boolean) => {
+    const previous = categories;
+    setTogglingIds((ids) => [...ids, id]);
+
+    // Optimistically update status to avoid table reload/flicker.
+    setCategories((current) =>
+      current.map((cat) => (cat.id === id ? { ...cat, isActive: nextIsActive } : cat)),
+    );
+
+    try {
+      const res = await fetch(`/api/config/categories/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: nextIsActive }),
+      });
+      if (!res.ok) throw new Error('Failed to toggle category');
+    } catch {
+      // Revert on failure.
+      setCategories(previous);
+    } finally {
+      setTogglingIds((ids) => ids.filter((x) => x !== id));
+    }
   };
 
   const deleteCategory = async (id: number) => {
@@ -213,7 +220,7 @@ export default function CategoriesPage() {
     setForm({ ...form, questions: form.questions.filter((_, i) => i !== idx) });
   };
 
-  // Build embed preview fields
+
   const previewFields = [
     { name: 'Category', value: form.name || 'Category Name', inline: true },
     { name: 'Priority', value: '🔵 Normal', inline: true },
@@ -240,15 +247,12 @@ export default function CategoriesPage() {
         <div className="bg-[#111111] border border-[#27272a] rounded-xl p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">{editing ? 'Edit Category' : 'New Category'}</h2>
-            <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-1.5 text-xs text-[#71717a] hover:text-white transition-colors">
-              {showPreview ? <EyeOff size={13} /> : <Eye size={13} />}
-              {showPreview ? 'Hide preview' : 'Show embed preview'}
-            </button>
+            <p className="text-xs text-[#71717a]">Live embed preview</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              {/* Basic info */}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-[#71717a] mb-1.5">Name</label>
@@ -286,7 +290,6 @@ export default function CategoriesPage() {
               </div>
             </div>
 
-            {/* Right column: questions + preview */}
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -337,19 +340,17 @@ export default function CategoriesPage() {
                 </div>
               </div>
 
-              {showPreview && (
-                <div>
-                  <p className="text-xs text-[#71717a] mb-2 font-medium">Embed Preview</p>
-                  <DiscordEmbed
-                    color={form.color}
-                    title={`${form.emoji || '🎫'} Ticket #0001`}
-                    description={form.welcomeMessage || DEFAULT_WELCOME}
-                    fields={previewFields}
-                    footer="GTPS Cloud Tools"
-                    timestamp
-                  />
-                </div>
-              )}
+              <div>
+                <p className="text-xs text-[#71717a] mb-2 font-medium">Embed Preview</p>
+                <DiscordEmbed
+                  color={form.color}
+                  title={`${form.emoji || '🎫'} Ticket #0001`}
+                  description={form.welcomeMessage || DEFAULT_WELCOME}
+                  fields={previewFields}
+                  footer="GTPS Cloud Tools"
+                  timestamp
+                />
+              </div>
             </div>
           </div>
 
@@ -395,13 +396,18 @@ export default function CategoriesPage() {
                   </td>
                   <td className="px-4 py-3 text-[#71717a] hidden sm:table-cell max-w-xs truncate">{cat.description}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={cat.isActive ? 'success' : 'muted'}>{cat.isActive ? 'Active' : 'Inactive'}</Badge>
+                    <Badge variant="default" value={cat.isActive ? 'active' : 'inactive'} className={cat.isActive ? 'text-[#22c55e] bg-[#22c55e]/10' : 'text-[#a1a1aa] bg-[#3f3f46]/20'} />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => toggleCategory(cat.id)} title={cat.isActive ? 'Deactivate' : 'Activate'} className="p-1.5 rounded hover:bg-[#27272a] transition-colors text-[#71717a] hover:text-white">
-                        {cat.isActive ? <ToggleRight size={16} className="text-[#22c55e]" /> : <ToggleLeft size={16} />}
-                      </button>
+                      <ToggleSwitch
+                        checked={cat.isActive}
+                        onChange={(next) => toggleCategory(cat.id, next)}
+                        label={cat.isActive ? 'Deactivate category' : 'Activate category'}
+                        showStateLabel={false}
+                        disabled={togglingIds.includes(cat.id)}
+                        className="mr-1"
+                      />
                       <button onClick={() => openEdit(cat)} className="p-1.5 rounded hover:bg-[#27272a] transition-colors text-[#71717a] hover:text-white"><Pencil size={15} /></button>
                       <button onClick={() => deleteCategory(cat.id)} className="p-1.5 rounded hover:bg-[#27272a] transition-colors text-[#71717a] hover:text-[#ef4444]"><Trash2 size={15} /></button>
                     </div>

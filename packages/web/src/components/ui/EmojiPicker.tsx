@@ -6,29 +6,96 @@ import { Search } from 'lucide-react';
 const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
   {
     label: 'Support',
-    emojis: ['🎫','🎟','📋','📝','📌','📎','🔖','📣','📢','💬','💭','🗒','🗂','📁','🗃','🗄','📊','📈','📉','🖊','✏','🖋'],
+    emojis: ['🎫','🎟','📋','📝','📌','📎','🔖','📣','📢','💬','💭','🗒','🗂','📁','🗃','🗄','📊','📈','📉','🖊','✏','🖋','🛟','🆘'],
   },
   {
     label: 'Status',
-    emojis: ['✅','❌','⚠','🚨','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🔇','🔔','🔕','📵','🚫','⛔','💡','🔦','🕯'],
+    emojis: ['✅','❌','⚠','🚨','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🔇','🔔','🔕','📵','🚫','⛔','💡','🔦','🕯','⏳','⌛','🕒','🕓'],
   },
   {
     label: 'People',
-    emojis: ['👤','👥','🧑','👨','👩','🧑‍💻','👨‍💻','👩‍💻','🧑‍🔧','🧑‍⚕','🧑‍🎓','🦸','🦹','🧙','🧑‍🤝‍🧑','🤝','🙋','🙋‍♂','🙋‍♀','🤗','🫡','💪','🙏'],
+    emojis: ['👤','👥','🧑','👨','👩','🧑‍💻','👨‍💻','👩‍💻','🧑‍🔧','🧑‍⚕','🧑‍🎓','🦸','🦹','🧙','🧑‍🤝‍🧑','🤝','🙋','🙋‍♂','🙋‍♀','🤗','🫡','💪','🙏','👮','🕵','🧑‍✈️'],
   },
   {
     label: 'Objects',
-    emojis: ['🔧','🔨','⚙','🛠','🔑','🗝','🔒','🔓','💻','🖥','📱','⌨','🖱','📡','🛡','⚡','🔋','💾','💿','📀','🏷','🎨'],
+    emojis: ['🔧','🔨','⚙','🛠','🔑','🗝','🔒','🔓','💻','🖥','📱','⌨','🖱','📡','🛡','⚡','🔋','💾','💿','📀','🏷','🎨','🧰','📦','🧪','🧷'],
   },
   {
     label: 'Symbols',
-    emojis: ['❓','❗','ℹ','🆕','🆓','🆒','🔺','🔻','➡','⬆','🔄','♻','💠','🔷','🔶','🔹','🔸','▶','⏩','🏁','🚀','⭐'],
+    emojis: ['❓','❗','ℹ','🆕','🆓','🆒','🔺','🔻','➡','⬆','🔄','♻','💠','🔷','🔶','🔹','🔸','▶','⏩','🏁','🚀','⭐','✨','🔥','📍','🧭'],
   },
   {
     label: 'Money',
     emojis: ['💰','💵','💴','💶','💷','💳','🏦','💱','🛒','🏪','🤑','💹','📦','🎁','🛍','🏷','💎','🥇','🥈','🥉','🏅','🎖'],
   },
+  {
+    label: 'Actions',
+    emojis: ['➕','➖','✖','🗑','♻️','📤','📥','📨','📩','🧹','🧼','🧯','🔍','🔎','🧪','🔁','🔀','🧭','🧠','📌'],
+  },
 ];
+
+const EMOJI_KEYWORDS: Record<string, string[]> = {
+  ticket: ['🎫', '🎟', '📋'],
+  support: ['💬', '📣', '🎫'],
+  help: ['💬', '❓', '🛟'],
+  question: ['❓', '💬', '🗒'],
+  ask: ['❓', '💬', '🙋'],
+  answer: ['✅', '💬', '📝'],
+  alert: ['🚨', '⚠', '❗'],
+  warning: ['⚠', '🚨', '🔔'],
+  danger: ['🚨', '🔴', '⛔'],
+  critical: ['🚨', '🔴', '⚡'],
+  error: ['❌', '⛔', '🚫'],
+  fail: ['❌', '🚫', '⛔'],
+  bug: ['🐛', '⚠', '❌'],
+  success: ['✅', '🏁', '⭐'],
+  pass: ['✅', '⭐', '🏁'],
+  open: ['🔓', '🟢', '✅'],
+  close: ['🔒', '❌', '⛔'],
+  solved: ['✅', '🏁', '⭐'],
+  pending: ['⏳', '🟡', '⌛'],
+  wait: ['⏳', '⌛', '🕒'],
+  lock: ['🔒', '🗝', '🔐'],
+  claim: ['🙋', '👤', '🤝'],
+  assign: ['👤', '📌', '🤝'],
+  user: ['👤', '🧑', '👥'],
+  staff: ['🛡', '🧑‍💻', '💪'],
+  moderator: ['🛡', '👮', '🔨'],
+  mod: ['🛡', '👮', '🔨'],
+  admin: ['🛡', '⚙', '🔑'],
+  config: ['⚙', '🔧', '🛠'],
+  settings: ['⚙', '🔧', '🛠'],
+  tool: ['🔧', '🛠', '⚙'],
+  security: ['🛡', '🔒', '🔑'],
+  priority: ['🔴', '🟠', '🟡', '🟢'],
+  urgent: ['🚨', '🔴', '⚡'],
+  low: ['🟢', '🔵'],
+  high: ['🟠', '🔴'],
+  medium: ['🟡', '🟠'],
+  normal: ['🔵', '🟢'],
+  money: ['💰', '💵', '💳'],
+  payment: ['💳', '💵', '🏦'],
+  price: ['🏷', '💰', '💵'],
+  shop: ['🛒', '🏪', '🏷'],
+  gift: ['🎁', '🛍', '📦'],
+  reward: ['🏅', '🎖', '🥇'],
+  star: ['⭐', '✨', '🎖'],
+  announce: ['📣', '📢', '🔔'],
+  channel: ['#️⃣', '📣', '📢'],
+  transcript: ['📄', '📝', '📋'],
+  image: ['🖼', '📷', '🎨'],
+  upload: ['📤', '📦', '🛍'],
+  download: ['📥', '📦', '💾'],
+  refresh: ['🔄', '🔁', '♻️'],
+  delete: ['🗑', '🚫', '✖'],
+  remove: ['🗑', '➖', '✖'],
+  add: ['➕', '🆕', '✅'],
+  edit: ['✏', '📝', '🖊'],
+  save: ['💾', '✅', '📌'],
+  search: ['🔍', '🔎', '❓'],
+  time: ['🕒', '⏳', '⌛'],
+  cloud: ['☁️', '🌩️', '⚡'],
+};
 
 interface Props {
   value: string;
@@ -49,8 +116,25 @@ export function EmojiPicker({ value, onChange }: Props) {
   }, []);
 
   const allEmojis = EMOJI_GROUPS.flatMap((g) => g.emojis);
-  const filtered = search
-    ? allEmojis.filter((e) => e.includes(search))
+  const query = search.trim().toLowerCase();
+  const keywordMatches = query
+    ? Object.entries(EMOJI_KEYWORDS)
+        .filter(([keyword]) => keyword.includes(query) || query.includes(keyword))
+        .flatMap(([, emojis]) => emojis)
+    : [];
+
+  const filtered = query
+    ? Array.from(
+        new Set(
+          [
+            ...keywordMatches,
+            ...EMOJI_GROUPS.flatMap((group) => {
+              const labelMatch = group.label.toLowerCase().includes(query);
+              return group.emojis.filter((emoji) => labelMatch || emoji.includes(search));
+            }),
+          ],
+        ),
+      )
     : null;
 
   return (
