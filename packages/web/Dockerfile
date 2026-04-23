@@ -1,6 +1,11 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_BETTER_AUTH_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_BETTER_AUTH_URL=$NEXT_PUBLIC_BETTER_AUTH_URL
+
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
