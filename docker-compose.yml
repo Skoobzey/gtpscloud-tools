@@ -23,6 +23,11 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      GUILD_ID: ${GUILD_ID}
+      WEB_BASE_URL: ${WEB_BASE_URL}
       DATABASE_URL: ${DATABASE_URL_DOCKER:-${DATABASE_URL}}
     depends_on:
       postgres:
@@ -41,6 +46,9 @@ services:
       DATABASE_URL: ${DATABASE_URL_DOCKER:-${DATABASE_URL}}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
     expose:
       - "3000"
     depends_on:
